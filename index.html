@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Hello World</title>
+  <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+  <!-- Don't use this in production: -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    .body {
+      margin: 0px;
+      padding: 0px;
+    }
+
+    p {
+      margin: 0px;
+    }
+
+    .cell {
+      height: 30px;
+      width: 30px;
+      border: 1px black solid;
+      font-family: monospace;
+      font-size: 14px;
+      cursor: pointer;
+      color: #000;
+      /* Fallback for older browsers */
+      color: rgba(0, 0, 0, 0);
+      user-select: none;
+    }
+
+    .cell:hover {
+      border: 1px red solid;
+
+    }
+
+    .dead {
+      background-color: white;
+    }
+
+    /* .dead:hover{
+      background-color: #f4fa9a;
+      
+    } */
+    .live {
+      background-color: #303030;
+    }
+
+    /* .live:hover{
+      background-color:#3b3b3b;
+    } */
+
+    .field {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: 980px;
+    }
+
+    .controlBox {
+      display: flex;
+      flex-direction: column;
+      width: 100px;
+      font-family: "Geneva", "Lucida Grande", Arial, Helvetica, sans-serif;
+      text-align: center;
+    }
+
+    .controlBox p {
+      margin: 10px;
+    }
+
+    .appContainer {
+      display: flex;
+      flex-direction: row;
+    }
+
+    button {
+      height: 30px;
+    }
+
+    .bigButton {
+      height: 50px;
+    }
+
+    .popup {
+      position: fixed;
+      z-index: 10;
+      top: 100px;
+      left: 100px;
+      width: 300px;
+      height: 200px;
+      background-color: white;
+      border: 1px black solid;
+    }
+  </style>
+
+</head>
+
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+
+
+    function Field({ isRunning, step, reset, backstep, importState }) {
+      const [fieldState, setFieldState] = React.useState(() => Array(20).fill("").map(e => (Array(30).fill(false))))
+      const [stateHistory, setStateHistory] = React.useState([])
+
+
+      function cellClickHandler(event) {
+        const [y, x] = event.target["id"].match(/\d+/g)
+        let newState = fieldState.slice()
+        newState[x][y] = !newState[x][y]
+        setFieldState(newState)
+      }
+
+      function stepUpdate() {
+        let updatedArray = Array(20).fill("").map(e => (Array(30).fill(null)))
+        //for each cell
+        fieldState.forEach((xElement, xIndex) => {
+          xElement.forEach((yElement, yIndex) => {
+            //function executed for each cell:
+            let neighbours = []
+            neighbours.push(fieldState[xIndex][yIndex - 1])
+            neighbours.push(fieldState[xIndex][yIndex + 1])
+            if (fieldState[xIndex - 1]) {
+              neighbours.push(fieldState[xIndex - 1][yIndex - 1])
+              neighbours.push(fieldState[xIndex - 1][yIndex])
+              neighbours.push(fieldState[xIndex - 1][yIndex + 1])
+            }
+            if (fieldState[xIndex + 1]) {
+              neighbours.push(fieldState[xIndex + 1][yIndex - 1])
+              neighbours.push(fieldState[xIndex + 1][yIndex])
+              neighbours.push(fieldState[xIndex + 1][yIndex + 1])
+            }
+            //console.log(fieldState[xIndex][yIndex] )
+            // console.log(neighbours)
+            const neightbourCount = neighbours.filter(e => e === true).length
+            // console.log(neightbourCount)
+            if (yElement) {//if cell is living
+              if (neightbourCount == 2 || neightbourCount == 3) {
+                //live stays living
+                updatedArray[xIndex][yIndex] = true
+              } else {
+                updatedArray[xIndex][yIndex] = false
+              }
+            } else { //if cell is dead
+              if (neightbourCount == 3) {
+                //dead comes alive
+                updatedArray[xIndex][yIndex] = true
+              } else {
+                updatedArray[xIndex][yIndex] = false
+              }
+
+            }
+          })
+        })
+        setStateHistory(stateHistory.concat([updatedArray]))
+        setFieldState(updatedArray)
+      }
+
+      //run the updates 
+      React.useEffect(() => {
+        let interval
+        if (isRunning) {
+          interval = setInterval(stepUpdate, 100)
+          console.log("running")
+        } else {
+          clearInterval(interval)
+          console.log("stopping")
+        }
+        return () => {
+          clearInterval(interval)
+        }
+      })
+
+      //on step
+      React.useEffect(() => {
+        stepUpdate()
+      }, [step])
+
+      //reset:
+      React.useEffect(() => {
+        const newarr = Array(20).fill("").map(e => (Array(30).fill(false)))
+        setFieldState(newarr)
+        setStateHistory([])
+      }, [reset])
+
+      //import state:
+      React.useEffect(() => {
+        if (importState == "growth 1") {
+          setFieldState([
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ]
+          ])
+        }
+        if (importState == "walkers"){
+          setFieldState([
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ]
+])
+        }
+      },[importState])
+
+      //TODO backstep does not work
+      //backstep:
+      React.useEffect(() => {
+        //this runs on mounting, when there is no history
+        //therefore we have to check if there is history
+        if (stateHistory.length > 0) {
+          console.log(stateHistory[stateHistory.length - 1])
+          setFieldState(stateHistory[stateHistory.length - 1])
+          setStateHistory(stateHistory.slice(0, stateHistory.length - 1))
+        }
+      }, [backstep])
+
+      const cellArray = fieldState.map((x, xIndex) => {
+        return x.map((y, yIndex) => {
+          return <
+            Cell location={String(yIndex) + " " + String(xIndex)}
+            alive={y}
+            key={String(yIndex) + " " + String(xIndex)}
+            onClick={cellClickHandler}
+          />
+        })
+      })
+
+      function consoleLogState() {
+        console.log(fieldState)
+      }
+
+      return (
+        <div className="field">
+          {cellArray}
+          <button onClick={consoleLogState} >console.log current state</button>
+        </div>
+      )
+    }
+
+    function Cell({ location, alive, onClick }) {
+      const [isLive, setIsLive] = React.useState(false)
+
+      return (
+        <div className={alive ? "live cell" : "dead cell"} children={location} id={location} onClick={onClick} />
+      )
+    }
+
+    function Controller({ runFunc, isRunning, stepAdd, resetFunc, backstep, popupEvent }) {
+      return (
+        <div className="controlBox">
+          <button onClick={resetFunc} >Reset</button>
+          <button onClick={popupEvent} >Open...</button>
+          <button onClick={stepAdd} >Run a step</button>
+          {/* <button onClick={backstep} >Back a step</button>*/}
+          <button className="bigButton" onClick={runFunc}>Start/Stop </button>
+          <p>{isRunning ? "Running..." : "Stopped"}</p>
+        </div>
+      )
+    }
+
+    function Popup({ closePopup, selectSaveHandler }) {
+      return (
+        <div className="popup">
+          <p>Select save state</p>
+          <select onChange={selectSaveHandler}>
+            <option>select option</option>
+            <option>walkers</option>
+            <option>growth 1</option>
+          </select>
+          <button onClick={closePopup}>Close</button>
+        </div>
+      )
+    }
+
+    function App() {
+      const [isRunning, setIsRunning] = React.useState(false)
+      const [step, setStep] = React.useState(0)
+      const [reset, setReset] = React.useState(0)
+      const [backstep, setBackstep] = React.useState(0)
+      const [popupState, setPopupState] = React.useState(false)
+      const [importedState, setImportedState] = React.useState([])
+
+      function toggleStart() {
+        setIsRunning(!isRunning)
+      }
+
+      function stepAdd() {
+        setStep(step + 1)
+      }
+
+      function backfunc() {
+        setBackstep(backstep + 1)
+      }
+
+      function resetFunc() {
+        setReset(reset + 1)
+        setIsRunning(false)
+        setPopupState(false)
+      }
+
+      function popupOn() {
+        setImportedState(null)
+        setPopupState(true)
+        setIsRunning(false)
+      }
+
+      function popupOff() {
+        setPopupState(false)
+      }
+
+      function selectSaveHandler(event) {
+        setImportedState(event.target.value)
+        console.log(event.target.value)
+      }
+
+      const popupElement = <Popup closePopup={popupOff} selectSaveHandler={selectSaveHandler} />
+
+      return (
+        <div className="appContainer">
+          <Field isRunning={isRunning} step={step} reset={reset} backstep={backstep} importState={importedState} />
+          <Controller
+            runFunc={toggleStart} isRunning={isRunning}
+            stepAdd={stepAdd} resetFunc={resetFunc} backstep={backfunc}
+            popupEvent={popupOn}
+          />
+          {popupState ? popupElement : null}
+
+        </div>
+      )
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+
+  </script>
+  <!--
+      Note: this page is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+      Read this section for a production-ready setup with JSX:
+      https://reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project
+
+      In a larger project, you can use an integrated toolchain that includes JSX instead:
+      https://reactjs.org/docs/create-a-new-react-app.html
+
+      You can also use React without JSX, in which case you can remove Babel:
+      https://reactjs.org/docs/react-without-jsx.html
+    -->
+</body>
+
+</html>
